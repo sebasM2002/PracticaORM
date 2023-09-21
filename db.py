@@ -6,7 +6,7 @@ SQLALCHEMY_DATABASE_URL = "postgresql://postgres:sebastian@localhost:5432/my_dat
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_trhead": False}
+    connect_args={"check_same_thread": False}
 )
 
 SessionLocal = sessionmaker(

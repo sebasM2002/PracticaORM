@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 from flask_openapi3 import OpenAPI
 from db import DBContext, engine
 from models import Store, Inventory, Employee
+import csv
 
 app = Flask(__name__)
 api = OpenAPI(app)
@@ -33,8 +34,21 @@ def create_inventory_entry():
 
 @app.route('/inventory/upload', methods=['POST'])
 def upload_csv():
-    # Aquí implementarías la lógica para cargar el CSV y agregar las entradas a la base de datos
-    pass
+    file = request.files['csvFile']
+    with DBContext() as db:
+        csv_reader = csv.DictReader(file.stream)
+        for row in csv_reader:
+            entry = Inventory(
+                store=row['Store'],
+                date=row['Date'],
+                flavor=row['Flavor'],
+                is_season_flavor=row['Is Season Flavor'] == 'Yes',
+                quantity=int(row['Quantity']),
+                listed_by=row['Listed By']
+            )
+            db.add(entry)
+        db.commit()
+    return jsonify({"message": "CSV uploaded and data added to the database successfully!"}), 201
 
 @app.route('/inventory/<int:id>', methods=['GET'])
 def get_inventory_by_id(id):

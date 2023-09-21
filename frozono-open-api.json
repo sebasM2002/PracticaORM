@@ -1,0 +1,137 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+      "title": "Ice Cream Inventory API",
+      "version": "1.0.0",
+      "description": "API for managing ice cream inventory"
+    },
+    "paths": {
+      "/inventory": {
+        "get": {
+          "summary": "Get a list of all inventory entries",
+          "responses": {
+            "200": {
+              "description": "List of inventory entries"
+            }
+          }
+        },
+        "post": {
+          "summary": "Create a new inventory entry",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "Store": "Store A",
+                  "Date": "2023-09-15",
+                  "Flavor": "Vanilla",
+                  "Is Season Flavor": "No",
+                  "Quantity": 70,
+                  "Listed By": "Mary"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Inventory entry created successfully"
+            }
+          }
+        }
+      },
+      "/inventory/upload": {
+        "post": {
+          "summary": "Upload inventory entries from a CSV file",
+          "requestBody": {
+            "content": {
+              "multipart/form-data": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "csvFile": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Inventory entries uploaded successfully"
+            }
+          }
+        }
+      },
+      "/inventory/{id}": {
+        "get": {
+          "summary": "Get details of a specific inventory entry by ID",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              },
+              "description": "ID of the inventory entry"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Inventory entry details"
+            }
+          }
+        },
+        "put": {
+          "summary": "Update an existing inventory entry by ID",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              },
+              "description": "ID of the inventory entry to update"
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "Quantity": 80,
+                  "Listed By": "Alice"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Inventory entry updated successfully"
+            }
+          }
+        },
+        "delete": {
+          "summary": "Delete a specific inventory entry by ID",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              },
+              "description": "ID of the inventory entry to delete"
+            }
+          ],
+          "responses": {
+            "204": {
+              "description": "Inventory entry deleted successfully"
+            }
+          }
+        }
+      }
+    }
+  }
+  

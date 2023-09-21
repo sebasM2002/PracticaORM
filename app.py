@@ -6,7 +6,6 @@ import csv
 
 app = Flask(__name__)
 api = OpenAPI(app)
-file = request.files['csvFile']
 
 
 with open("frozono-open-api.json", "r") as f:

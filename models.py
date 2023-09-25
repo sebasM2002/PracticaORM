@@ -4,7 +4,7 @@ from db import Base
 
 
 class Store(Base):
-    __tablename__ = "Store"
+    __tablename__ = "store"
 
     id = Column(Integer, primary_key=True)
     name = Column(String(50))

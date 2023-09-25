@@ -2,14 +2,15 @@ from flask import Flask, jsonify, request
 from flask_openapi3 import OpenAPI
 import csv
 from db import DBContext, engine
+import sqlalchemy as sa
 
 from models import Store, Inventory, Employee
-
 from flask_openapi3 import Info, Tag
-from flask_openapi3 import OpenAPI
+import pandas as pd
 
 info = Info(title="book API", version="1.0.0")
 app = OpenAPI(__name__, info=info)
+counter = 0
 
 # with open("frozono-open-api.json", "r") as f:
 #     spec = api.load_spec(f)
@@ -46,27 +47,28 @@ def create_inventory_entry():
 
 @app.post("/inventory/upload", methods=["POST"])
 def upload_csv():
-    file = request.files["csvFile"]
-    with DBContext() as db:
-        csv_reader = csv.DictReader(file.stream)
-        for row in csv_reader:
-            entry = Inventory(
-                store=row["Store"],
-                date=row["Date"],
-                flavor=row["Flavor"],
-                is_season_flavor=row["Is Season Flavor"] == "Yes",
-                quantity=int(row["Quantity"]),
-                listed_by=row["Listed By"],
-            )
-            db.add(entry)
-        db.commit()
-    return (
-        jsonify(
-            {"message": "CSV uploaded and data added to the database successfully!"}
-        ),
-        201,
-    )
+    conn = engine.connect()
+    df=pd.read_csv("C:\\Users\\sebas\\Desktop\\PracticaORM\\PracticaORM\\frozono.csv")
+    df = df.drop(df.columns[6], axis=1)
+    df = df.dropna()
 
+    df2 = df[" Listed By"].unique()
+    df3 = df["Store"].unique()
+
+    if counter == 0:
+
+        data = pd.DataFrame({'name': df2})
+        data.to_sql('Employee', conn, if_exists='append', index=False)
+
+        data = pd.DataFrame({'name': df3})
+        data.to_sql('store', conn, if_exists='append', index=False)
+
+        EmployeesFK = pd.read_sql('SELECT * FROM store', conn)
+        merging = df.merge(EmployeesFK, on='Store', how='inner')
+        counter ++ 1    
+
+    conn.close()
+    return "",204
 
 @app.get("/inventory/<int:id>", methods=["GET"])
 def get_inventory_by_id(id):

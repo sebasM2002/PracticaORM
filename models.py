@@ -23,7 +23,7 @@ class Inventory(Base):
     id = Column(Integer, primary_key=True)
     store_id = Column(Integer, ForeignKey("store.id"))
     employee_id = Column(Integer, ForeignKey("employee.id"))
-    date = Column(Date)
+    date = Column(String(50))
     flavor = Column(String(50))
     is_season_flavor = Column(Boolean)
     quantity = Column(Integer)

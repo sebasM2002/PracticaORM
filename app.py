@@ -54,15 +54,22 @@ def upload_csv():
     df = df.reset_index(drop=True)
 
     df2 = df[" Listed By"].unique()
-    df3 = df["Store"].unique()
 
-    if count == 0:   
-        data = pd.DataFrame({'name': df2})
-        data.to_sql('employee', conn, if_exists='append', index=False)
+    df3 = df["Store"] .unique()
+    print (df3)
+    with DBContext() as db:
+        for store in df3:
+            entry = Store(
+                name = store
+                )
+            db.add(entry)
 
-        data = pd.DataFrame({'name': df3})
-        data.to_sql('store', conn, if_exists='append', index=False)
-
+        for employee in df2:
+            entry2 = Employee(
+                name = employee
+                )
+            db.add(entry2)
+        db.commit()
         storeFK = pd.read_sql('SELECT * FROM store', conn)
         storeData = pd.DataFrame({'name': df["Store"]})
         merge_store = storeData.merge(storeFK, on='name', how='left', sort=False)
@@ -71,12 +78,26 @@ def upload_csv():
         employeeData = pd.DataFrame({'name': df[" Listed By"]})
         merge_employee = employeeData.merge(employeeFK, on='name', how='left', sort=False)
 
-        data = pd.DataFrame({'store_id': merge_store["id"] , 'employee_id': merge_employee["id"] , 'date': df[" Date"] , 'flavor': df[" Flavor"] , 'is_season_flavor': df[" Is Season Flavor"] , 'quantity': df[" Quantity"]})
-        data.to_sql('inventory', conn, if_exists="append", index=False)
+        df["Store"] = merge_store["id"]
+        df[" Listed By"] = merge_employee["id"]
+    
+        for index, rows in df.iterrows():
+            if rows[3] == " Yes":
+                value = True
+            else:
+                value = False
+            entry3 = Inventory(
+                store_id = rows[0],
+                employee_id = rows[5],
+                date = rows[1],
+                flavor = rows[2],
+                is_season_flavor = value,
+                quantity = rows[4]
+            )
+            db.add(entry3)
+        db.commit()
+    return "", 200
 
-
-    conn.close()
-    return "",204
 
 @app.get("/inventory/<int:id>", methods=["GET"])
 def get_inventory_by_id(id):

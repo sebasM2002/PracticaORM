@@ -10,7 +10,7 @@ import pandas as pd
 
 info = Info(title="book API", version="1.0.0")
 app = OpenAPI(__name__, info=info)
-counter = 0
+count = 0
 
 # with open("frozono-open-api.json", "r") as f:
 #     spec = api.load_spec(f)
@@ -51,21 +51,29 @@ def upload_csv():
     df=pd.read_csv("C:\\Users\\sebas\\Desktop\\PracticaORM\\PracticaORM\\frozono.csv")
     df = df.drop(df.columns[6], axis=1)
     df = df.dropna()
+    df = df.reset_index(drop=True)
 
     df2 = df[" Listed By"].unique()
     df3 = df["Store"].unique()
 
-    if counter == 0:
-
+    if count == 0:   
         data = pd.DataFrame({'name': df2})
-        data.to_sql('Employee', conn, if_exists='append', index=False)
+        data.to_sql('employee', conn, if_exists='append', index=False)
 
         data = pd.DataFrame({'name': df3})
         data.to_sql('store', conn, if_exists='append', index=False)
 
-        EmployeesFK = pd.read_sql('SELECT * FROM store', conn)
-        merging = df.merge(EmployeesFK, on='Store', how='inner')
-        counter ++ 1    
+        storeFK = pd.read_sql('SELECT * FROM store', conn)
+        storeData = pd.DataFrame({'name': df["Store"]})
+        merge_store = storeData.merge(storeFK, on='name', how='left', sort=False)
+
+        employeeFK = pd.read_sql('SELECT * FROM employee', conn)
+        employeeData = pd.DataFrame({'name': df[" Listed By"]})
+        merge_employee = employeeData.merge(employeeFK, on='name', how='left', sort=False)
+
+        data = pd.DataFrame({'store_id': merge_store["id"] , 'employee_id': merge_employee["id"] , 'date': df[" Date"] , 'flavor': df[" Flavor"] , 'is_season_flavor': df[" Is Season Flavor"] , 'quantity': df[" Quantity"]})
+        data.to_sql('inventory', conn, if_exists="append", index=False)
+
 
     conn.close()
     return "",204

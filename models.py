@@ -11,18 +11,18 @@ class Store(Base):
 
 
 class Employee(Base):
-    __tablename__ = "Employee"
+    __tablename__ = "employee"
 
     id = Column(Integer, primary_key=True)
     name = Column(String(50))
 
 
 class Inventory(Base):
-    __tablename__ = "Inventory"
+    __tablename__ = "inventory"
 
     id = Column(Integer, primary_key=True)
     store_id = Column(Integer, ForeignKey("store.id"))
-    employee_id = Column(Integer, ForeignKey("Employee.id"))
+    employee_id = Column(Integer, ForeignKey("employee.id"))
     date = Column(Date)
     flavor = Column(String(50))
     is_season_flavor = Column(Boolean)

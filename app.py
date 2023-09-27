@@ -104,8 +104,8 @@ def get_inventory_by_id(id):
     with DBContext() as db:
         entry = db.query(Inventory).get(id)
         if not entry:
-            return "Entry not found", 404
-        return jsonify(entry.to_dict())
+            return jsonify({"error": "Entry not found"}), 404
+        return jsonify(entry.to_dict()), 200
 
 
 @app.put("/inventory/<int:id>", methods=["PUT"])

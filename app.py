@@ -121,15 +121,20 @@ def update_inventory_entry(id):
     return jsonify(entry.to_dict())
 
 
-@app.delete("/inventory/<int:id>", methods=["DELETE"])
-def delete_inventory_entry(id):
-    with DBContext() as db:
-        entry = db.query(Inventory).get(id)
-        if not entry:
-            return "Entry- not found", 404
-        db.delete(entry)
-        db.commit()
-    return "", 204
+@app.delete("/inventory/clear", methods=["DELETE"])
+def clear_data():
+    try:
+        with DBContext() as db:
+            db.query(Inventory).delete()
+
+            db.query(Employee).delete()
+
+            db.query(Store).delete()
+
+            db.commit()
+        return jsonify({"success": "All data cleared successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # api.generate_routes()

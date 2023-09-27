@@ -244,8 +244,8 @@ def get_inventory_by_id(id):
     with DBContext() as db:
         entry = db.query(Inventory).get(id)
         if not entry:
-            return jsonify({"error": "Entry not found"}), 404
-        return jsonify(entry.to_dict()), 200
+            return "Entry not found", 404
+        return jsonify(entry.to_dict())
 
 
 @app.put("/inventory/<int:id>", methods=["PUT"])
@@ -259,7 +259,6 @@ def update_inventory_entry(id):
         entry.listed_by = data.get("Listed By", entry.listed_by)
         db.commit()
     return jsonify(entry.to_dict())
-
 
 
 @app.delete("/inventory/clear", methods=["DELETE"])
@@ -276,6 +275,9 @@ def clear_data():
         return jsonify({"success": "All data cleared successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+
 
 # api.generate_routes()
 

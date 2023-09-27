@@ -126,7 +126,7 @@ def delete_inventory_entry(id):
     with DBContext() as db:
         entry = db.query(Inventory).get(id)
         if not entry:
-            return "Entry not found", 404
+            return "Entry- not found", 404
         db.delete(entry)
         db.commit()
     return "", 204

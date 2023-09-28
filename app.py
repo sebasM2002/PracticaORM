@@ -69,14 +69,17 @@ def home():
 @app.get("/store", methods=["GET"])
 @cache.cached(timeout=300)
 async def get_store():
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get("per_page", default=3, type=int)
     parameters = request.args.to_dict()
-    invent = await asyncio.to_thread(Store.query.all)
+    paginated_query = Store.query.paginate(page=page, per_page=per_page, error_out=False)
+    invent = paginated_query.items
     if 'name' in parameters and parameters['name']:
         names = [name.strip() for name in parameters.get('name').split(',')]
         if len(names) > 1:
-            inven = await asyncio.to_thread(Store.query.filter(Store.name.in_(names)).all)
+            inven = Store.query.filter(Store.name.in_(names)).all
         else:
-            inven = await asyncio.to_thread(Store.query.filter(Store.name.ilike(parameters.get('name'))).all)
+            inven = Store.query.filter(Store.name.ilike(parameters.get('name'))).all
         data = [item.deserialize() for item in inven]
         return jsonify(data), 200
     else:
@@ -86,34 +89,41 @@ async def get_store():
 @app.get("/employee", methods=["GET"])
 @cache.cached(timeout=300)
 async def get_employee():
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get("per_page", default=3, type=int)
     parameters = request.args.to_dict()
-    invent = await asyncio.to_thread(Employee.query.all)
+    paginated_query = Employee.query.paginate(page=page, per_page=per_page, error_out=False)
+    invent = paginated_query.items
     if 'name' in parameters and parameters['name']:
         names = [name.strip() for name in parameters.get('name').split(',')]
         if len(names) > 1:
-            inven = await asyncio.to_thread(Employee.query.filter(Employee.name.in_(names)).all)
+            inven = Employee.query.filter(Employee.name.in_(names)).all
         else:
-            inven = await asyncio.to_thread(Employee.query.filter(Employee.name.ilike(parameters.get('name'))).all)
+            inven = Employee.query.filter(Employee.name.ilike(parameters.get('name'))).all
         data = [item.deserialize() for item in inven]
         return jsonify(data), 200
     else:
         data = [item.deserialize() for item in invent]
-        return jsonify(data), 200
+        return jsonify(data), 200 
 
 @app.get("/inventory", methods=["GET"])
 async def get_inventory():
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get("per_page", default=50, type=int)
     parameters = request.args.to_dict()
-    invent = await asyncio.to_thread(Inventory.query.all)
+    paginated_query = Inventory.query.paginate(page=page, per_page=per_page, error_out=False)
+    invent = paginated_query.items
     data = [item.deserialize() for item in invent]
     compare = data
     shared_values = []
+    
     if 'flavor' in parameters and parameters['flavor']:
-        flavors = [flavor.strip() for flavor in parameters.get('flavor').split(',')]
-        if len(flavors) > 1:
-            inven = await asyncio.to_thread(Inventory.query.filter(Inventory.flavor.in_(flavors)).all)
+        flavors=[flavor.strip() for flavor in parameters.get('flavor').split(',')]
+        if len(flavors)> 1:
+            inven = Inventory.query.filter(Inventory.flavor.in_(flavors)).all()
         else:
-            inven = await asyncio.to_thread(Inventory.query.filter(Inventory.flavor.ilike(parameters.get('flavor'))).all)
-        data = [item.deserialize() for item in inven]
+            inven = Inventory.query.filter(Inventory.flavor.ilike(parameters.get('flavor')))
+        data=[item.deserialize() for item in inven]
         for tuple in data:
             if tuple in compare:
                 shared_values.append(tuple)
@@ -121,7 +131,147 @@ async def get_inventory():
         compare = compare + shared_values
         shared_values.clear()
 
-    # Repite el mismo enfoque asincrónico para las demás condiciones de filtro
+    if 'employee_id' in parameters and parameters['employee_id']:
+        employee=[employee.strip() for employee in parameters.get('employee_id').split(',')]
+        if len(employee)> 1:
+            inven = Inventory.query.filter(Inventory.employee_id.in_(employee)).all()
+        else:
+            inven = Inventory.query.filter(Inventory.employee_id == parameters.get('employee_id'))
+        data=[item.deserialize() for item in inven]
+        for tuple in data:
+            if tuple in compare:
+                shared_values.append(tuple)
+        compare.clear()
+        compare = compare + shared_values
+        shared_values.clear()  
+    
+    if 'store_id' in parameters and parameters['store_id']:
+        store=[store.strip() for store in parameters.get('store_id').split(',')]
+        if len(store)> 1:
+            inven = Inventory.query.filter(Inventory.store_id.in_(store)).all()
+        else:
+            inven = Inventory.query.filter(Inventory.store_id == parameters.get('store_id'))
+        data=[item.deserialize() for item in inven]
+        for tuple in data:
+            if tuple in compare:
+                shared_values.append(tuple)
+        compare.clear()
+        compare = compare + shared_values
+        shared_values.clear() 
+
+
+    if 'quantity[gte]' in parameters and parameters['quantity[gte]']:
+        inven = Inventory.query.filter(Inventory.quantity >= parameters.get('quantity[gte]'))
+        data=[item.deserialize() for item in inven]
+        for tuple in data:
+            if tuple in compare:
+                shared_values.append(tuple)
+        compare.clear()
+        compare = compare + shared_values
+        shared_values.clear()
+
+    if 'quantity[lte]' in parameters and parameters['quantity[lte]']:
+        inven = Inventory.query.filter(Inventory.quantity <= parameters.get('quantity[lte]'))
+        data=[item.deserialize() for item in inven]
+        for tuple in data:
+            if tuple in compare:
+                shared_values.append(tuple)
+        compare.clear()
+        compare = compare + shared_values
+        shared_values.clear()
+
+    if 'quantity[lt]' in parameters and parameters['quantity[lt]']:
+        inven = Inventory.query.filter(Inventory.quantity < parameters.get('quantity[lt]'))
+        data=[item.deserialize() for item in inven]
+        for tuple in data:
+            if tuple in compare:
+                shared_values.append(tuple)
+        compare.clear()
+        compare = compare + shared_values
+        shared_values.clear()
+        
+        
+    if 'quantity[gt]' in parameters and parameters['quantity[gt]']:
+        inven = Inventory.query.filter(Inventory.quantity > parameters.get('quantity[gt]'))
+        data=[item.deserialize() for item in inven]
+        for tuple in data:
+            if tuple in compare:
+                shared_values.append(tuple)
+        compare.clear()
+        compare = compare + shared_values
+        shared_values.clear()
+
+    if 'quantity[eq]' in parameters and parameters['quantity[eq]']:
+        inven = Inventory.query.filter(Inventory.quantity == parameters.get('quantity[eq]'))
+        data=[item.deserialize() for item in inven]
+        for tuple in data:
+            if tuple in compare:
+                shared_values.append(tuple)
+        compare.clear()
+        compare = compare + shared_values
+        shared_values.clear()
+
+
+    if 'date' in parameters and parameters['date']:
+        inven = Inventory.query.filter(Inventory.date == parameters.get('date'))
+        data=[item.deserialize() for item in inven]
+        for tuple in data:
+            if tuple in compare:
+                shared_values.append(tuple)
+        compare.clear()
+        compare = compare + shared_values
+        shared_values.clear()
+    
+    if 'date[gte]' in parameters and parameters['date[gte]']:
+        inven = Inventory.query.filter(Inventory.date >= parameters.get('date[gte]'))
+        data=[item.deserialize() for item in inven]
+        for tuple in data:
+            if tuple in compare:
+                shared_values.append(tuple)
+        compare.clear()
+        compare = compare + shared_values
+        shared_values.clear()
+
+    if 'date[lte]' in parameters and parameters['date[lte]']:
+        inven = Inventory.query.filter(Inventory.date <= parameters.get('date[lte]'))
+        data=[item.deserialize() for item in inven]
+        for tuple in data:
+            if tuple in compare:
+                shared_values.append(tuple)
+        compare.clear()
+        compare = compare + shared_values
+        shared_values.clear()
+
+    if 'date[lt]' in parameters and parameters['date[lt]']:
+        inven = Inventory.query.filter(Inventory.date < parameters.get('date[lt]'))
+        data=[item.deserialize() for item in inven]
+        for tuple in data:
+            if tuple in compare:
+                shared_values.append(tuple)
+        compare.clear()
+        compare = compare + shared_values
+        shared_values.clear()
+        
+        
+    if 'date[gt]' in parameters and parameters['date[gt]']:
+        inven = Inventory.query.filter(Inventory.date > parameters.get('date[gt]'))
+        data=[item.deserialize() for item in inven]
+        for tuple in data:
+            if tuple in compare:
+                shared_values.append(tuple)
+        compare.clear()
+        compare = compare + shared_values
+        shared_values.clear()
+    
+    if 'is_season_flavor' in parameters and parameters['is_season_flavor']:
+        inven = Inventory.query.filter(Inventory.is_season_flavor == parameters.get('is_season_flavor'))
+        data=[item.deserialize() for item in inven]
+        for tuple in data:
+            if tuple in compare:
+                shared_values.append(tuple)
+        compare.clear()
+        compare = compare + shared_values
+        shared_values.clear()
 
     return jsonify(compare), 200
 
@@ -146,7 +296,7 @@ async def create_inventory_entry():
     return jsonify(entry.to_dict()), 201
 
 @app.post("/inventory/upload", methods=["POST"])
-def upload_csv():
+async def upload_csv():
     conn = engine.connect()
     df=pd.read_csv("C:\\Users\\grego\\Desktop\\PracticaORM\\frozono60.csv")
 
@@ -226,5 +376,6 @@ async def clear_data():
         return jsonify({"success": "All data cleared successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 if __name__ == "__main__":
     app.run(debug=True)

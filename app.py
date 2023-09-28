@@ -146,11 +146,53 @@ async def create_inventory_entry():
     return jsonify(entry.to_dict()), 201
 
 @app.post("/inventory/upload", methods=["POST"])
-async def upload_csv():
+def upload_csv():
     conn = engine.connect()
-    df = pd.read_csv("C:\\Users\\grego\\Desktop\\PracticaORM\\frozono60.csv")
-    # ...
+    df=pd.read_csv("C:\\Users\\grego\\Desktop\\PracticaORM\\frozono60.csv")
 
+    df2 = df["Listed By"].unique()
+
+    df3 = df["Store"] .unique()
+    print (df3)
+    with DBContext() as db:
+        for store in df3:
+            entry = Store(
+                name = store
+                )
+            db.add(entry)
+
+        for employee in df2:
+            entry2 = Employee(
+                name = employee
+                )
+            db.add(entry2)
+        db.commit()
+        storeFK = pd.read_sql('SELECT * FROM store', conn)
+        storeData = pd.DataFrame({'name': df["Store"]})
+        merge_store = storeData.merge(storeFK, on='name', how='left', sort=False)
+
+        employeeFK = pd.read_sql('SELECT * FROM employee', conn)
+        employeeData = pd.DataFrame({'name': df["Listed By"]})
+        merge_employee = employeeData.merge(employeeFK, on='name', how='left', sort=False)
+
+        df["Store"] = merge_store["id"]
+        df["Listed By"] = merge_employee["id"]
+    
+        for index, rows in df.iterrows():
+            if rows[3] == "Yes":
+                value = True
+            else:
+                value = False
+            entry3 = Inventory(
+                store_id = rows[0],
+                employee_id = rows[5],
+                date = rows[1],
+                flavor = rows[2],
+                is_season_flavor = value,
+                quantity = rows[4]
+            )
+            db.add(entry3)
+        db.commit()
     return "", 200
 
 @app.get("/inventory/<int:id>", methods=["GET"])

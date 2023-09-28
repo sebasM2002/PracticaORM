@@ -1,0 +1,10 @@
+psycopg2
+alembic
+sqlalchemy
+flask_openapi3
+pandas
+python-dotenv
+flask_sqlalchemy
+psycopg2-binary
+Flask-Caching
+flask[async]

@@ -1,17 +1,22 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request,redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask_openapi3 import OpenAPI, Info, Tag
 from db import DBContext, engine
 import sqlalchemy as sa
 import pandas as pd
 from collections import OrderedDict
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 
 info = Info(title="book API", version="1.0.0")
 app = OpenAPI(__name__, info=info)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:sebastian@localhost:5432/my_database'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db = SQLAlchemy(app)
 
 class Store(db.Model):
@@ -40,7 +45,7 @@ class Inventory(db.Model):
             ('date', self.date),
             ('flavor',self.flavor),
             ('is_season_flavor', self.is_season_flavor),
-            ('quantity', self.quantity)
+            ('quantity', self.quantity),
         ])
 
 # with open("frozono-open-api.json", "r") as f:
@@ -48,6 +53,9 @@ class Inventory(db.Model):
 
 book_tag = Tag(name="book", description="Some Book")
 
+@app.route('/')
+def inicio():
+    return redirect("http://127.0.0.1:5000/inventory")
 
 @app.get("/inventory", methods=["GET"])
 def get_inventory():
@@ -160,12 +168,9 @@ def get_inventory():
         compare.clear()
         compare = compare + shared_values
         shared_values.clear()
-    
-
-    
-        
 
     return jsonify(compare), 200
+
 
 @app.post("/inventory", methods=["POST"])
 def create_inventory_entry():
@@ -191,8 +196,7 @@ def create_inventory_entry():
 @app.post("/inventory/upload", methods=["POST"])
 def upload_csv():
     conn = engine.connect()
-    df=pd.read_csv("C:\\Users\\sebas\\Desktop\\PracticaORM\\PracticaORM\\frozono60.csv")
-
+    df=pd.read_csv("C:\\Users\\grego\\Desktop\\PracticaORM\\frozono60.csv")
     df2 = df["Listed By"].unique()
 
     df3 = df["Store"] .unique()
@@ -276,8 +280,28 @@ def clear_data():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.get("/store", methods=["GET"])
+def get_store():
+    store = Store.query.all()
+    values = [item.deserialize() for item in store]
+    invent = Store.query.all()
+    data = [item.deserialize() for item in invent]
+    compare = data
+    
+    compare.clear()
+    return jsonify(compare), 200
 
-
+@app.post("/store", methods=["POST"])
+def create_store_entry():
+    data = request.get_json()
+    with DBContext() as db:
+        entry = Inventory(
+            id = data[0],
+            name = data[1]
+        )
+        db.add(entry)
+        db.commit()
+    return jsonify(entry.to_dict()), 201
 
 # api.generate_routes()
 

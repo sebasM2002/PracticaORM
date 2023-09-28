@@ -5,22 +5,35 @@ from db import DBContext, engine
 import sqlalchemy as sa
 import pandas as pd
 from collections import OrderedDict
-
-
+from flask_caching import Cache
 
 info = Info(title="book API", version="1.0.0")
 app = OpenAPI(__name__, info=info)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:sebastian@localhost:5432/my_database'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['CACHE_TYPE'] = 'simple'
+cache = Cache(app)
 db = SQLAlchemy(app)
 
 class Store(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
 
+    def deserialize(self):
+        return OrderedDict([
+            ('id',self.id),
+            ('name', self.name),
+        ])
+
 class Employee(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
+
+    def deserialize(self):
+        return OrderedDict([
+            ('id',self.id),
+            ('name', self.name),
+        ])
 
 
 class Inventory(db.Model):
@@ -47,6 +60,40 @@ class Inventory(db.Model):
 #     spec = api.load_spec(f)
 
 book_tag = Tag(name="book", description="Some Book")
+
+
+@app.get("/store", methods=["GET"])
+def get_store():
+    parameters= request.args.to_dict()
+    invent = Store.query.all()
+    if 'name' in parameters and parameters['name']:
+        names = [name.strip() for name in parameters.get('name').split(',')]
+        if len(names)> 1:
+            inven = Store.query.filter(Store.name.in_(names)).all()
+        else:
+            inven = Store.query.filter(Store.name.ilike(parameters.get('name')))
+        data=[item.deserialize() for item in inven]
+        return jsonify(data), 200
+    else:
+        data=[item.deserialize() for item in invent]
+        return jsonify(data), 200
+    
+
+@app.get("/employee", methods=["GET"])
+def get_employee():
+    parameters= request.args.to_dict()
+    invent = Employee.query.all()
+    if 'name' in parameters and parameters['name']:
+        names = [name.strip() for name in parameters.get('name').split(',')]
+        if len(names)> 1:
+            inven = Employee.query.filter(Employee.name.in_(names)).all()
+        else:
+            inven = Employee.query.filter(Employee.name.ilike(parameters.get('name')))
+        data=[item.deserialize() for item in inven]
+        return jsonify(data), 200
+    else:
+        data=[item.deserialize() for item in invent]
+        return jsonify(data), 200
 
 
 @app.get("/inventory", methods=["GET"])
@@ -117,7 +164,7 @@ def get_inventory():
                 shared_values.append(tuple)
         compare.clear()
         compare = compare + shared_values
-        shared_values.clear
+        shared_values.clear()
 
     if 'quantity[lt]' in parameters and parameters['quantity[lt]']:
         inven = Inventory.query.filter(Inventory.quantity < parameters.get('quantity[lt]'))
@@ -138,7 +185,7 @@ def get_inventory():
                 shared_values.append(tuple)
         compare.clear()
         compare = compare + shared_values
-        shared_values.clear
+        shared_values.clear()
 
     if 'quantity[eq]' in parameters and parameters['quantity[eq]']:
         inven = Inventory.query.filter(Inventory.quantity == parameters.get('quantity[eq]'))
@@ -148,7 +195,7 @@ def get_inventory():
                 shared_values.append(tuple)
         compare.clear()
         compare = compare + shared_values
-        shared_values.clear
+        shared_values.clear()
 
 
     if 'date' in parameters and parameters['date']:
@@ -161,9 +208,56 @@ def get_inventory():
         compare = compare + shared_values
         shared_values.clear()
     
+    if 'date[gte]' in parameters and parameters['date[gte]']:
+        inven = Inventory.query.filter(Inventory.date >= parameters.get('date[gte]'))
+        data=[item.deserialize() for item in inven]
+        for tuple in data:
+            if tuple in compare:
+                shared_values.append(tuple)
+        compare.clear()
+        compare = compare + shared_values
+        shared_values.clear()
 
-    
+    if 'date[lte]' in parameters and parameters['date[lte]']:
+        inven = Inventory.query.filter(Inventory.date <= parameters.get('date[lte]'))
+        data=[item.deserialize() for item in inven]
+        for tuple in data:
+            if tuple in compare:
+                shared_values.append(tuple)
+        compare.clear()
+        compare = compare + shared_values
+        shared_values.clear()
+
+    if 'date[lt]' in parameters and parameters['date[lt]']:
+        inven = Inventory.query.filter(Inventory.date < parameters.get('date[lt]'))
+        data=[item.deserialize() for item in inven]
+        for tuple in data:
+            if tuple in compare:
+                shared_values.append(tuple)
+        compare.clear()
+        compare = compare + shared_values
+        shared_values.clear()
         
+        
+    if 'date[gt]' in parameters and parameters['date[gt]']:
+        inven = Inventory.query.filter(Inventory.date > parameters.get('date[gt]'))
+        data=[item.deserialize() for item in inven]
+        for tuple in data:
+            if tuple in compare:
+                shared_values.append(tuple)
+        compare.clear()
+        compare = compare + shared_values
+        shared_values.clear()
+    
+    if 'is_season_flavor' in parameters and parameters['is_season_flavor']:
+        inven = Inventory.query.filter(Inventory.is_season_flavor == parameters.get('is_season_flavor'))
+        data=[item.deserialize() for item in inven]
+        for tuple in data:
+            if tuple in compare:
+                shared_values.append(tuple)
+        compare.clear()
+        compare = compare + shared_values
+        shared_values.clear()
 
     return jsonify(compare), 200
 

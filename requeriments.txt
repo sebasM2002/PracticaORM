@@ -8,3 +8,5 @@ flask_sqlalchemy
 psycopg2-binary
 Flask-Caching
 flask[async]
+Flask-GraphQL
+graphene_sqlalchemy

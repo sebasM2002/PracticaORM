@@ -1,0 +1,35 @@
+schema {
+    query: Query
+    mutation: Mutation
+}
+type Query {
+  inventory: [Inventory!]!
+  inventoryByFlavor(flavor: String!): [Inventory!]!
+  inventoryByShop(shop: String!): [Inventory!]!
+  inventoryByDate(date: String!): [Inventory!]!
+}
+type Mutation {
+  addInventory(inventory: InventoryInput!): Inventory!
+}
+input InventoryInput {
+  shop: ShopInput!
+  employee: EmployeeInput!
+  icecream: IcecreamInput!
+  date: String!
+}
+input IcecreamInput {
+  flavor: String!
+  count: Int!
+  is_season_flavor: Boolean!
+}
+input ShopInput {
+  name: String!
+}
+input EmployeeInput {
+  name: String!
+}
+type Icecream {
+  flavor: String!
+  count: Int!
+  is_season_flavor: Boolean!
+}

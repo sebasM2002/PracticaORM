@@ -4,9 +4,12 @@ sqlalchemy
 flask_openapi3
 pandas
 python-dotenv
-flask_sqlalchemy
+flask-sqlalchemy
 psycopg2-binary
 Flask-Caching
 flask[async]
-Flask-GraphQL
+flask-GraphQL
 graphene_sqlalchemy
+ariadne
+flask-Cors
+graphene

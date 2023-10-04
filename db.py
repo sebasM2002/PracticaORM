@@ -1,9 +1,7 @@
 from sqlalchemy import create_engine
 
 from sqlalchemy.ext.declarative import declarative_base
-
-# from flask_sqlalchemy import DeclarativeBase
-from sqlalchemy.orm import session, sessionmaker
+from sqlalchemy.orm import session, sessionmaker, scoped_session
 from dotenv import load_dotenv
 import os
 

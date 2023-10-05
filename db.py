@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import session, sessionmaker, scoped_session
+from sqlalchemy.orm import session, sessionmaker
 from dotenv import load_dotenv
 import os
 
@@ -13,10 +13,9 @@ engine = create_engine(
     SQLALCHEMY_DATABASE_URL
 )
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, expire_on_commit=False)
 
 Base = declarative_base()
-
 
 class DBContext:
     def __init__(self):

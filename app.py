@@ -9,7 +9,6 @@ from flask_caching import Cache
 import os
 from dotenv import load_dotenv
 import asyncio
-import graphene
 from flask import Flask
 from flask_graphql import GraphQLView
 from schema import schema
@@ -66,28 +65,13 @@ class Inventory(db.Model):
 
 book_tag = Tag(name="book", description="Some Book")
 
-"""
-@app.route("/graphql", methods=["POST"])
-def graphql_server():
-    data = request.get_json()
-    success, result = graphql_sync(
-        schema,
-        data,
-        context_value=request
-    )
-    status_code = 200 if success else 400
-    return jsonify(result), status_code
-"""
-
 app.add_url_rule(
     '/graphql',
     view_func=GraphQLView.as_view(
         'graphql',
         schema=schema,
-        graphiql=True # for having the GraphiQL interface
+        graphiql=True 
     )
-    
-    
 )
 
 @app.route("/", methods=["GET"])
